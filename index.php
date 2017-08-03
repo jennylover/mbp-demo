@@ -10,7 +10,7 @@ $bucket_out = "mbp-trans-output";
 <html>
     <head><meta charset="UTF-8"></head>
     <body>
-        <h1>S3 upload example</h1>
+        <h1>MBP upload example</h1>
 <?php
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['userfile']) && $_FILES['userfile']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['userfile']['tmp_name'])) {
     try {
@@ -29,7 +29,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['userfile']) && $_FILES
         ));
         //var_dump($result);
 ?>
-        <p>Upload <a href="<?=htmlspecialchars($result['ObjectURL'])?>">successful</a> :)</p>
+        <p>Upload <?php echo($result['ObjectURL']); ?> successful :) transcoding is working. please reload your page after 5secs later.</p>
 <?php
     } catch(Exception $e) {
 ?>
