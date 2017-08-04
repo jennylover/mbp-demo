@@ -15,7 +15,7 @@
         // an exception indicates the accesstoken is incorrect - $this->user will still be null
     }
 
-    echo("[[[[[".$user."]]]]]");
+    // echo("[[[[[".$user."]]]]]");
     //echo("[[[[[".$user->get("Username")."]]]]]");
 
     if(!$user) {
@@ -31,7 +31,7 @@
 <html>
     <head><meta charset="UTF-8"></head>
     <body>
-        <h1>MBP upload example</h1>
+        <h1>Welcome <?php echo($user->get("Username")); ?> to MBP upload example</h1>
 <?php
     if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['userfile']) && $_FILES['userfile']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['userfile']['tmp_name'])) {
         try {
