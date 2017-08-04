@@ -6,10 +6,10 @@ use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 $cognito = CognitoIdentityProviderClient::factory(['version' => 'latest', 'region' => 'ap-northeast-1']);
 
 if(isset($_POST['action'])) {
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
+    $username = $_POST['username'];
+    $password = $_POST['password'];
     if($_POST['action'] === 'register') {
-        $email = $_POST['email'] ?? '';
+        $email = $_POST['email'];
         $error = $wrapper->signup($username, $email, $password);
         if(empty($error)) {
             header('Location: confirm.php?username=' . $username);
