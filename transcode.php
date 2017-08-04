@@ -19,7 +19,7 @@
     //echo("[[[[[".$user->get("Username")."]]]]]");
 
     if(!$user) {
-        header('Location: login.php');
+        header('Location: index.php');
         exit;
     }
 
