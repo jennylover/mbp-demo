@@ -1,71 +1,85 @@
 <?php
-require('vendor/autoload.php');
-use Aws\S3\S3Client;
-use Aws\Exception\AwsException;
+require 'vendor/autoload.php';
+use Aws\CognitoIdentity\CognitoIdentityClient;
+use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
-$s3 = S3Client::factory(['version' => '2006-03-01', 'region' => 'ap-northeast-1']);
-$bucket_in = "mbp-trans-input";
-$bucket_out = "mbp-trans-output";
+$cognito = CognitoIdentityProviderClient::factory(['version' => 'latest', 'region' => 'ap-northeast-1']);
+
+if(isset($_POST['action'])) {
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
+    if($_POST['action'] === 'register') {
+        $email = $_POST['email'] ?? '';
+        $error = $wrapper->signup($username, $email, $password);
+        if(empty($error)) {
+            header('Location: confirm.php?username=' . $username);
+            exit;
+        }
+    }
+    if($_POST['action'] === 'login') {
+        $error = "";
+        try {
+            $result = $cognito->adminInitiateAuth([
+                'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
+                'ClientId' => '2ga3gtpfcpmv779huimj8gpuj7',
+                'UserPoolId' => 'ap-northeast-1_mlzCAKlYh',
+                'AuthParameters' => [
+                    'USERNAME' => $username,
+                    'PASSWORD' => $password,
+                ],
+            ]);
+        } catch(\Exception $e) {
+            $error = $e->getMessage();
+        }
+
+        $accessToken = $result->get('AuthenticationResult')['AccessToken'];
+        setcookie("aws-cognito-app-access-token", $accessToken, time() + 3600);
+
+        if(empty($error)) {
+            header('Location: transcode.php');
+            exit;
+        }
+    }
+}
+$message = '';
+if(isset($_GET['reset'])) {
+    $message = 'Your password has been reset. You can now login with your new password';
+}
 ?>
 <html>
-    <head><meta charset="UTF-8"></head>
+    <head>
+        <meta charset='utf-8'>
+        <meta http-equiv='x-ua-compatible' content='ie=edge'>
+        <title>AWS Cognito App - Register and Login</title>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+    </head>
     <body>
-        <h1>MBP upload example</h1>
-<?php
-if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['userfile']) && $_FILES['userfile']['error'] == UPLOAD_ERR_OK && is_uploaded_file($_FILES['userfile']['tmp_name'])) {
-    try {
-        $result = $s3->putObject(array(
-            'Bucket'       => $bucket_in,
-            'Key'          => $_FILES['userfile']['name'],
-            'SourceFile'   => $_FILES['userfile']['tmp_name'],
-            //'Body'         => fopen($_FILES['userfile']['tmp_name'], 'r+'),
-            //'ContentType'  => 'text/plain',
-            //'ACL'          => 'public-read',
-            // 'StorageClass' => 'REDUCED_REDUNDANCY',
-            'Metadata'     => array(
-                'param1' => 'value 1',
-                'param2' => 'value 2'
-            )
-        ));
-        //var_dump($result);
-?>
-        <p>Upload <?php echo($result['ObjectURL']); ?> successful :) transcoding is working. please reload your page after 5secs later.</p>
-<?php
-    } catch(Exception $e) {
-?>
-        <p>Upload error :(</p>
-<?php
-    }
-}
-?>
-        <h2>Upload a file</h2>
-        <form enctype="multipart/form-data" action="<?=$_SERVER['PHP_SELF']?>" method="POST">
-            <input name="userfile" type="file"><input type="submit" value="Upload">
+        <h1>Menu</h1>
+        <ul>
+            <li><a href='/'>Index</a></li>
+            <li><a href='/secure.php'>Secure page</a></li>
+            <li><a href='/confirm.php'>Confirm signup</a></li>
+            <li><a href='/forgotpassword.php'>Forgotten password</a></li>
+            <li><a href='/logout.php'>Logout</a></li>
+        </ul>
+        <p style='color: red;'><?php //echo $error;?></p>
+        <p style='color: green;'><?php echo $message;?></p>
+        <h1>Register</h1>
+        <form method='post' action=''>
+            <input type='text' placeholder='Username' name='username' /><br />
+            <input type='text' placeholder='Email' name='email' /><br />
+            <input type='password' placeholder='Password' name='password' /><br />
+            <input type='hidden' name='action' value='register' />
+            <input type='submit' value='Register' />
         </form>
 
-        <table width="70%" align="center" border="1">
-<?php
-try {
-    $result = $s3->listObjects(array('Bucket' => $bucket_out, 'Delimiter' => '/'));
-
-    foreach ($result['CommonPrefixes'] as $object) {
-        echo("<tr>");
-        echo("<td colspan='4'><img src='http://www.theisozone.com/images/icons/forum.png'> ".$object['Prefix']."</td>");
-        echo("</tr>");
-    }
-
-    foreach ($result['Contents'] as $object) {
-        echo("<tr>");
-        echo("<td width='50%'><img src='https://www.yourgenome.org/modules/file/icons/video-x-generic.png'> ".$object['Key']."</td>");
-        echo("<td width='30%'>".$object['LastModified'].['date']."</td>");
-        echo("<td width='15%'>".$object['Size']." Bytes</td>");
-        echo("<td width='5%' align='center'><a href='http://d231sc70bupmhp.cloudfront.net/".$object['Key']."' target='_new'><img src='http://www.zemra.de/images/03-media-logo/play-zemra.png'></td>");
-        echo("</tr>");
-    }
-} catch (S3Exception $e) {
-    echo $e->getMessage() . "\n";
-}
-?>
-        <table>
+        <h1>Login</h1>
+        <form method='post' action=''>
+            <input type='text' placeholder='Username' name='username' /><br />
+            <input type='password' placeholder='Password' name='password' /><br />
+            <input type='hidden' name='action' value='login' />
+            <input type='submit' value='Login' />
+        </form>
+        <p><a href='/forgotpassword.php'>Forgot password?</a></p>
     </body>
 </html>
