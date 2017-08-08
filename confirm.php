@@ -21,7 +21,7 @@ if(isset($_POST['action'])) {
     }
 
     if(empty($error)) {
-        header('Location: login.php');
+        header('Location: index.php');
     }
 }
 ?>
