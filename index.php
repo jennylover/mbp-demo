@@ -9,7 +9,7 @@ if(isset($_POST['action'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
     if($_POST['action'] === 'register') {
-        $email = $_POST['email'] ?? '';
+        $email = $_POST['email'];
         $error = "";
         try {
             $result = $cognito->signUp([

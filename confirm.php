@@ -7,8 +7,8 @@ use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 $cognito = CognitoIdentityProviderClient::factory(['version' => 'latest', 'region' => 'ap-northeast-1']);
 
 if(isset($_POST['action'])) {
-    $username = $_POST['username'] ?? '';
-    $confirmation = $_POST['confirmation'] ?? '';
+    $username = $_POST['username'];
+    $confirmation = $_POST['confirmation'];
     $error = "";
     try {
         $result = $cognito->confirmSignUp([
