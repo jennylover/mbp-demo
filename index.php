@@ -9,8 +9,28 @@ if(isset($_POST['action'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
     if($_POST['action'] === 'register') {
-        $email = $_POST['email'];
-        $error = $wrapper->signup($username, $email, $password);
+        $email = $_POST['email'] ?? '';
+        $error = "";
+        try {
+            $result = $cognito->signUp([
+                'ClientId' => '2ga3gtpfcpmv779huimj8gpuj7',
+                'Username' => $username,
+                'Password' => $password,
+                'UserAttributes' => [
+                    [
+                        'Name' => 'name',
+                        'Value' => $username
+                    ],
+                    [
+                        'Name' => 'email',
+                        'Value' => $email
+                    ]
+                ],
+            ]);
+        } catch (\Exception $e) {
+            $error = $e->getMessage();
+        }
+
         if(empty($error)) {
             header('Location: confirm.php?username=' . $username);
             exit;
